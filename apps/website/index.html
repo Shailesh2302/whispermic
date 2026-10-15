@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhisperMic — Voice-to-text that turns speech into clear, polished writing</title>
+<meta name="description" content="The voice-to-text that turns speech into clear, polished writing in every app. Tiny mic overlay, real-time, <300ms latency.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="top"><div class="wrap">
+  <a class="logo" href="index.html" style="text-decoration:none"><span class="dot">🎙</span> WhisperMic</a>
+  <div class="links">
+    <a class="nav" href="docs.html">Docs</a>
+    <a class="nav" href="install.html">Install</a>
+    <a class="btn small" href="install.html">⬇ Download</a>
+  </div>
+</div></nav>
+
+<div class="wrap">
+<div class="hero">
+  <div>
+    <span class="kicker">● LIVE · Rust engine · &lt;300ms partials</span>
+    <h1>Speak anywhere.<br><span class="grad">Polished writing everywhere.</span></h1>
+    <p class="sub">The voice-to-text that turns speech into <b style="color:#fff">clear, polished writing in every app</b>. A <b style="color:#fff">tiny 56px mic</b> floats above everything you do. Press <span class="kbd">Ctrl</span> + <span class="kbd">Alt</span> + <span class="kbd">D</span>, speak, and refined text streams in real-time into Chrome, VS Code, Word, Notion — anywhere. Auto-hides when you're done.</p>
+    <div class="cta">
+      <a class="btn" data-dl href="install.html">⬇ Download for <span data-os-dl>your OS</span></a>
+      <a class="btn ghost" href="docs.html">How it works</a>
+    </div>
+    <div class="meta"><span><b>~15 KB</b> overlay</span><span><b>Offline</b> whisper.cpp mode</span><span><b>Global</b> shortcut</span><span>★ No framework bloat</span></div>
+  </div>
+  <div class="demo-card">
+    <div class="demo-bar"><span class="dot3" style="background:#f87171"></span><span class="dot3" style="background:#fbbf24"></span><span class="dot3" style="background:#34d399"></span><span style="margin-left:8px">whispermic — overlay preview</span></div>
+    <div class="micstage">
+      <div class="mic">🎙</div>
+      <div>
+        <div style="font-size:13px;color:var(--ok)">● LISTENING · 48kHz → 16kHz</div>
+        <div style="font-size:12px;color:var(--mut)">VAD open · streaming partials…</div>
+      </div>
+    </div>
+    <div class="typebox" style="margin-top:12px;background:#070c15;border:1px solid var(--line);border-radius:10px;padding:12px"><span id="demo-text"></span></div>
+    <div style="font-size:12px;color:var(--mut);margin-top:10px">Try it: press <span class="kbd">Ctrl</span>+<span class="kbd">Alt</span>+<span class="kbd">D</span> in the real app → speak → text lands at cursor.</div>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="card"><div class="ico">⚡</div><h3>Real-time, word-by-word</h3><p>16kHz capture → energy VAD → streaming STT. Partials every ~300ms, typed instantly via enigo. No waiting for silence.</p></div>
+  <div class="card"><div class="ico">🔬</div><h3>Refined before typing</h3><p>Filler removal (um/uh), auto-caps, punctuation restoration, spacing fix — in Rust, &lt;1ms, no network needed.</p></div>
+  <div class="card"><div class="ico">🪟</div><h3>Tiny, auto-hiding mic</h3><p>56px always-on-top circle. Fades to a 12px dot after 3s silence. Draggable. Summon anytime with global shortcut.</p></div>
+  <div class="card"><div class="ico">🦀</div><h3>Rust backend</h3><p>cpal audio, lock-free pipeline, whisper.cpp / Deepgram streaming. Zero-GC, ~5ms overhead.</p></div>
+  <div class="card"><div class="ico">⌨️</div><h3>Types at cursor</h3><p>Works in every app — browser, IDE, docs, terminal. No copy-paste, no focus stealing.</p></div>
+  <div class="card"><div class="ico">🔌</div><h3>Offline + cloud</h3><p>Local <code style="font-family:var(--mono);font-size:12px">tiny.en</code> model offline, or Deepgram Nova-2 for max speed. Switch in Settings.</p></div>
+</div>
+
+<div class="section">
+  <h2>How it works</h2>
+  <p class="lead">Audio never touches the DOM. Everything hot-path runs in Rust.</p>
+  <div class="steps">
+    <div class="step"><b>1. Press shortcut</b><br><span style="color:var(--mut);font-size:14px">Global <span class="kbd">Ctrl+Alt+D</span> or hold <span class="kbd">Ctrl+Alt+Space</span> for push-to-talk. Overlay pops, mic opens.</span></div>
+    <div class="step"><b>2. Speak</b><br><span style="color:var(--mut);font-size:14px">VAD gates silence → 1.5s windows stream to STT → <code>refine()</code> polishes → <code>enigo</code> types at cursor.</span></div>
+    <div class="step"><b>3. Done → auto-hide</b><br><span style="color:var(--mut);font-size:14px">3s silence → stop + fade to dot. Your text stays where you dictated it.</span></div>
+  </div>
+<pre>mic (cpal 16kHz) → vad.rs (energy gate, 30ms frames)
+  → stt.rs (streaming partials, ~300ms)
+    → refine.rs (fillers, caps, punct.)
+      → typer.rs (enigo key injection at cursor)</pre>
+</div>
+
+<div class="section">
+  <h2>Latency budget</h2>
+  <table><tr><th>Stage</th><th>Time</th><th>Notes</th></tr>
+  <tr><td>Mic → VAD</td><td>30 ms</td><td>30ms frame + hangover</td></tr>
+  <tr><td>STT partial</td><td>200–300 ms</td><td>Deepgram streaming / whisper tiny.en</td></tr>
+  <tr><td>Refine</td><td>&lt;1 ms</td><td>pure Rust regex/rules</td></tr>
+  <tr><td>Type at cursor</td><td>~5 ms</td><td>enigo</td></tr>
+  <tr><td><b>Total word-visible</b></td><td><b>~250–350 ms</b></td><td>feels instant</td></tr>
+  </table>
+</div>
+
+<div class="section" style="text-align:center">
+  <h2>Ready to dictate?</h2>
+  <p class="lead">Free during beta. No account needed. 2-minute install.</p>
+  <a class="btn" data-dl href="install.html">⬇ Download now →</a>
+  <p style="font-size:13px;color:var(--mut)"><a href="docs.html">How it works</a> · <a href="install.html">Install guide</a></p>
+</div>
+</div>
+
+<footer><div class="wrap" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+<span>© <span data-year></span> WhisperMic</span><span style="margin-left:auto"></span>
+<a href="docs.html" style="color:var(--mut)">Docs</a><a href="install.html" style="color:var(--mut)">Install</a>
+</div></footer>
+<script src="js/config.js"></script><script src="js/auth.js"></script><script src="js/main.js"></script>
+</body></html>

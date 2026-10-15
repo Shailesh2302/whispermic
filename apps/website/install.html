@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Install — WhisperMic</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<nav class="top"><div class="wrap">
+<a class="logo" href="index.html" style="text-decoration:none"><span class="dot">🎙</span> WhisperMic</a>
+<div class="links"><a class="nav" href="docs.html">Docs</a><a class="nav active" href="install.html">Install</a><a class="btn small" href="#dl">⬇ Download</a></div>
+</div></nav>
+<div class="wrap"><div class="doc-layout">
+<aside class="side"><a href="#dl" class="active">Download</a><a href="#win">Windows</a><a href="#mac">macOS</a><a href="#linux">Linux</a><a href="#models">Models (offline)</a><a href="#dev">Dev build</a></aside>
+<main>
+<h1 style="margin-top:0">Installation</h1>
+<div class="notice">Beta builds are signed. If OS warns "unknown developer", see per-OS steps below. No account needed — downloads are open to everyone.</div>
+
+<h2 id="dl">Download</h2>
+<table><tr><th>OS</th><th>File</th><th>Size</th></tr>
+<tr data-os-row="windows"><td>Windows 10/11</td><td><a data-dl-file="WhisperMic_0.1.0_x64.msi" href="downloads/WhisperMic_0.1.0_x64.msi" download><code>WhisperMic_0.1.0_x64.msi</code></a></td><td>~9 MB</td></tr>
+<tr data-os-row="macos"><td>macOS 13+ (Apple Silicon + Intel)</td><td><a data-dl-file="WhisperMic_0.1.0_aarch64.dmg" href="downloads/WhisperMic_0.1.0_aarch64.dmg" download><code>WhisperMic_0.1.0_aarch64.dmg</code></a></td><td>~8 MB</td></tr>
+<tr data-os-row="linux"><td>Linux · Debian/Ubuntu</td><td><a data-dl-file="WhisperMic_0.1.0_amd64.deb" href="downloads/WhisperMic_0.1.0_amd64.deb" download><code>WhisperMic_0.1.0_amd64.deb</code></a></td><td>~5 MB</td></tr>
+<tr data-os-row="linux"><td>Linux · Fedora/RHEL</td><td><a data-dl-file="WhisperMic-0.1.0-1.x86_64.rpm" href="downloads/WhisperMic-0.1.0-1.x86_64.rpm" download><code>WhisperMic-0.1.0-1.x86_64.rpm</code></a></td><td>~5 MB</td></tr></table>
+<p style="font-size:13px;color:var(--mut)">Filenames above are what CI publishes per release — until the first release, <a href="#linux">build them locally</a>; the links activate automatically once <code>RELEASES_URL</code> is set in <code>js/config.js</code>.</p>
+<p><a class="btn" data-dl href="#dl">⬇ Get builds</a></p>
+
+<h2 id="win">Windows</h2>
+<pre>1. Run .msi → Next → Finish
+2. Launch WhisperMic (tray icon appears)
+3. Allow Microphone when prompted
+4. Click any text field, press Ctrl+Alt+D, speak.</pre>
+
+<h2 id="mac">macOS</h2>
+<pre>1. Open .dmg → drag WhisperMic to Applications
+2. First launch: right-click → Open (bypass Gatekeeper once)
+3. System Settings → Privacy & Security:
+   - Microphone → enable WhisperMic
+   - Accessibility → enable WhisperMic  (required for typing!)
+4. Relaunch app. Press Ctrl+Option+D.</pre>
+<p style="font-size:14px;color:var(--mut)">Note: macOS uses <span class="kbd">Ctrl</span>+<span class="kbd">⌥</span>+<span class="kbd">D</span> (Option = Alt).</p>
+
+<h2 id="linux">Linux — pick your package</h2>
+<div class="notice">No published release yet, so there is nothing to download — <b>build the packages yourself</b> (one command, ~5 min first time), then install the file it produces.</div>
+<pre># 1. one-time system deps (Debian/Ubuntu)
+sudo apt update && sudo apt install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+  libayatana-appindicator3-dev librsvg2-dev patchelf libasound2-dev rpm
+
+# 2. build the installers (from repo root)
+bun install
+bunx turbo run build --filter=@whispermic/desktop
+# outputs land in apps/desktop/src-tauri/target/release/bundle/{deb,rpm}/ + website/downloads/</pre>
+<pre># Option A — Debian / Ubuntu (.deb, recommended)
+sudo apt install ./apps/desktop/src-tauri/target/release/bundle/deb/WhisperMic_0.1.0_amd64.deb
+
+# Option B — Fedora / RHEL (.rpm)
+sudo dnf install ./apps/desktop/src-tauri/target/release/bundle/rpm/WhisperMic-0.1.0-1.x86_64.rpm</pre>
+<p style="font-size:14px;color:var(--mut)">Wayland: typing needs XWayland or <code>ydotool</code> portal. X11 works out of the box.</p>
+
+<h2 id="models">Offline models (optional, for local STT)</h2>
+<pre>mkdir -p ~/.whispermic/models
+cd ~/.whispermic/models
+# tiny.en = fastest (~75MB), base.en = better (~145MB)
+curl -L -o ggml-tiny.en.bin \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin
+# then in app Settings → Provider → Local</pre>
+
+<h2 id="dev">Build from source (developers — Turborepo)</h2>
+<pre>git clone &lt;repo&gt; && cd dictation_app
+bun install              # installs workspaces + turbo (single bun.lock)
+bun run test             # runs all workspace tests via turbo
+bunx turbo dev --filter=@whispermic/desktop   # hot reload overlay
+bunx turbo run build --filter=@whispermic/desktop  # → apps/desktop/src-tauri/target/release/bundle/
+
+# Rust only (no UI):
+cd apps/desktop/src-tauri && cargo check && cargo run</pre>
+<p>Configure STT keys via env (see <code>apps/desktop/.env.example</code>):</p>
+<pre>STT_PROVIDER=deepgram
+DEEPGRAM_API_KEY=dg_...
+OPENAI_API_KEY=sk-...</pre>
+<p><a href="docs.html">→ Continue to Docs: shortcuts, refinement, troubleshooting</a></p>
+</main>
+</div></div>
+<footer><div class="wrap">© <span data-year></span> WhisperMic</div></footer>
+<script src="js/main.js"></script>
+</body></html>

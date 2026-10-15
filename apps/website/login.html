@@ -1,0 +1,30 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login — WhisperMic</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<nav class="top"><div class="wrap">
+<a class="logo" href="index.html" style="text-decoration:none"><span class="dot">🎙</span> WhisperMic</a>
+<div class="links"><a class="nav" href="docs.html">Docs</a><a class="nav" href="install.html">Install</a><a class="btn small" href="install.html">⬇ Download</a></div>
+</div></nav>
+<div class="auth-wrap"><div class="auth-card">
+<h1>Welcome back</h1><p>Login to download builds, sync shortcuts & API keys.</p>
+<form id="f">
+<label>Email</label><input id="email" type="email" required placeholder="you@work.com">
+<label>Password</label><input id="pw" type="password" required placeholder="••••••••">
+<div class="err" id="err"></div><div class="okmsg" id="ok"></div>
+<button class="btn full" type="submit">Login →</button>
+</form>
+<p style="font-size:13px;margin-top:14px">No account? <a href="signup.html">Sign up free</a></p>
+<p style="font-size:12px;color:var(--mut)">Demo auth uses localStorage. Set <code style="font-family:var(--mono)">API_URL</code> in <code style="font-family:var(--mono)">js/config.js</code> for real backend (Supabase/REST).</p>
+</div></div>
+<script src="js/config.js"></script><script src="js/auth.js"></script>
+<script>
+document.getElementById("f").addEventListener("submit", async e=>{
+  e.preventDefault(); hideErr("err");
+  const email=document.getElementById("email").value.trim(), pw=document.getElementById("pw").value;
+  try{ const u=await apiLogin(email,pw); Auth.set(u);
+    showOk("ok","Logged in! Redirecting…"); setTimeout(()=>location.href="install.html",700);
+  }catch(err){ showErr("err", err.message); }
+});
+</script>
+</body></html>

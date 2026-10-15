@@ -1,0 +1,13 @@
+{
+  "name": "@whispermic/website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WhisperMic marketing + auth + docs site (static, zero build)",
+  "type": "module",
+  "scripts": {
+    "dev": "bun server.ts",
+    "build": "rm -rf dist && mkdir -p dist && cp -r index.html login.html signup.html docs.html install.html css js server.ts downloads dist/",
+    "test": "bun test",
+    "lint": "bun tests/lint.ts"
+  }
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign up — WhisperMic</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<nav class="top"><div class="wrap">
+<a class="logo" href="index.html" style="text-decoration:none"><span class="dot">🎙</span> WhisperMic</a>
+<div class="links"><a class="nav" href="docs.html">Docs</a><a class="nav" href="install.html">Install</a><a class="btn small" href="install.html">⬇ Download</a></div>
+</div></nav>
+<div class="auth-wrap"><div class="auth-card">
+<h1>Create account</h1><p>Free beta · sync settings across machines.</p>
+<form id="f">
+<label>Name</label><input id="name" type="text" required placeholder="Ada Lovelace">
+<label>Email</label><input id="email" type="email" required placeholder="you@work.com">
+<label>Password</label><input id="pw" type="password" required minlength="6" placeholder="Min 6 chars">
+<div class="err" id="err"></div><div class="okmsg" id="ok"></div>
+<button class="btn full" type="submit">Create account →</button>
+</form>
+<p style="font-size:13px;margin-top:14px">Have an account? <a href="login.html">Login</a></p>
+</div></div>
+<script src="js/config.js"></script><script src="js/auth.js"></script>
+<script>
+document.getElementById("f").addEventListener("submit", async e=>{
+  e.preventDefault(); hideErr("err");
+  const name=document.getElementById("name").value.trim(),
+        email=document.getElementById("email").value.trim(),
+        pw=document.getElementById("pw").value;
+  try{ const u=await apiSignup(name,email,pw); Auth.set(u);
+    showOk("ok","Account created! Redirecting to install…"); setTimeout(()=>location.href="install.html",700);
+  }catch(err){ showErr("err", err.message); }
+});
+</script>
+</body></html>

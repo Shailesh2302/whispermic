@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Docs — WhisperMic</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<nav class="top"><div class="wrap">
+<a class="logo" href="index.html" style="text-decoration:none"><span class="dot">🎙</span> WhisperMic</a>
+<div class="links"><a class="nav active" href="docs.html">Docs</a><a class="nav" href="install.html">Install</a><a class="btn small" href="install.html">⬇ Download</a></div>
+</div></nav>
+<div class="wrap"><div class="doc-layout">
+<aside class="side">
+<a href="#quick" class="active">Quick start</a><a href="#use">How to use</a><a href="#shortcuts">Shortcuts</a><a href="#refine">Refinement</a><a href="#personal">Dictionary & snippets</a><a href="#providers">STT providers</a><a href="#privacy">Privacy</a><a href="#trouble">Troubleshooting</a>
+</aside>
+<main>
+<h1 style="margin-top:0">Docs — how to use WhisperMic</h1>
+
+<h2 id="quick">Quick start (60s)</h2>
+<ol>
+<li>Install from <a href="install.html">Install page</a>, launch WhisperMic. Tiny mic appears top-right.</li>
+<li>Click any text field (browser, VS Code, Word) — leave cursor there.</li>
+<li>Press <span class="kbd">Ctrl</span>+<span class="kbd">Alt</span>+<span class="kbd">D</span> → speak → watch words appear at cursor in real-time.</li>
+<li>Pause 3s → auto-stop + mic fades to dot. Press shortcut again anytime.</li>
+</ol>
+<div class="notice">Grant <b>Microphone</b> + <b>Accessibility</b> (macOS) / <b>Input</b> permissions on first run, or typing won't work. See Install page.</div>
+
+<h2 id="use">How to use the product</h2>
+<ul>
+<li><b>Tiny overlay:</b> drag it anywhere. Scroll on it = volume? No — scroll passes through. Right-click → Settings (provider, auto-hide delay, shortcut).</li>
+<li><b>Push-to-talk:</b> hold <span class="kbd">Ctrl</span>+<span class="kbd">Alt</span>+<span class="kbd">Space</span>, release to finish. Best for passwords / short inserts.</li>
+<li><b>Long dictation:</b> toggle once, speak paragraphs. Say <i>"new line"</i> / <i>"full stop"</i> → converted to <code>\n</code> / <code>.</code> automatically.</li>
+<li><b>Works everywhere:</b> typing is OS-level (enigo), so the target app never needs a plugin.</li>
+</ul>
+
+<h2 id="shortcuts">Keyboard shortcuts</h2>
+<table><tr><th>Action</th><th>Default</th><th>Custom?</th></tr>
+<tr><td>Toggle dictation (global)</td><td><span class="kbd">Ctrl</span>+<span class="kbd">Alt</span>+<span class="kbd">D</span></td><td>Yes — Settings → press keys</td></tr>
+<tr><td>Push-to-talk (hold)</td><td><span class="kbd">Ctrl</span>+<span class="kbd">Alt</span>+<span class="kbd">Space</span></td><td>Yes</td></tr>
+<tr><td>Hide overlay</td><td><span class="kbd">Esc</span></td><td>No (overlay focus only)</td></tr></table>
+<div class="notice">On <b>Wayland</b> (default on Ubuntu/Fedora) global shortcuts + always-on-top need X11 — the app switches to XWayland automatically, so shortcuts just work. Override with <code>WINIT_UNIX_BACKEND=wayland</code> if you ever want the native backend (shortcuts will stop working there — use mic click instead).</div>
+
+<h2 id="refine">Audio + text refinement</h2>
+<p>Before typing, <code>refine.rs</code> runs (&lt;1ms, offline):</p>
+<ul>
+<li>Noise gate via VAD — breath/clicks below threshold never reach STT.</li>
+<li>Filler strip: <code>um, uh, like, you know</code> (configurable list).</li>
+<li>Auto-capitalise sentence starts + "i" → "I".</li>
+<li>Collapse 3+ spaces, fix <code>space-before-comma</code>, ensure end punctuation.</li>
+<li>Voice commands: "new line"→↵, "tab"→⇥, "full stop/period"→., "comma"→,, "question mark"→?.</li>
+</ul>
+<pre>// apps/desktop/src-tauri/src/refine.rs
+pub fn refine(raw: &str) -> String { /* fillers → caps → punct → spacing */ }</pre>
+
+<h2 id="personal">Dictionary, snippets, styles, history</h2>
+<p>Right-click the mic → Settings. Everything is stored offline in <code>~/.whispermic/</code> — no account, no cloud.</p>
+<ul>
+<li><b>Dictionary:</b> STT keeps mishearing a name or term? Add <i>hears → writes</i> (e.g. <i>koober neties → Kubernetes</i>). Applied to every utterance, case-insensitive, punctuation-safe.</li>
+<li><b>Snippets:</b> say a trigger phrase alone (e.g. <i>"my email"</i>) and your saved expansion is typed instead. Whole-utterance only, so it never fires mid-sentence by accident.</li>
+<li><b>Styles:</b> <i>Professional</i> (caps + punctuation), <i>Concise</i> (also cuts hedges like "i think", "just", "really"), <i>Casual</i> (relaxed casing).</li>
+<li><b>History:</b> last 200 finished dictations, newest first. Click any entry to type it again at your cursor.</li>
+</ul>
+
+<h2 id="providers">STT providers (speed vs offline)</h2>
+<table><tr><th>Provider</th><th>Latency</th><th>Offline</th><th>When to use</th></tr>
+<tr><td><b>Deepgram Nova-2</b> (streaming)</td><td>~200ms partials</td><td>No</td><td>Fastest, needs key</td></tr>
+<tr><td><b>OpenAI Whisper API</b> (chunked)</td><td>~600ms</td><td>No</td><td>Good accuracy, slower</td></tr>
+<tr><td><b>Local whisper.cpp tiny.en</b></td><td>~300ms*</td><td>Yes</td><td>Private/offline (*GPU/NPU dependent)</td></tr>
+<tr><td><b>Mock</b></td><td>instant</td><td>Yes</td><td>Dev without mic/model</td></tr></table>
+<p>Set in overlay Settings or <code>STT_PROVIDER</code> env. See <code>apps/desktop/src-tauri/src/stt.rs</code>.</p>
+
+<h2 id="privacy">Privacy</h2>
+<ul><li>Local mode: audio never leaves device.</li><li>Cloud mode: 1.5s PCM chunks TLS → provider only. No storage by us.</li><li>Auth tokens stored in OS keychain (Tauri stronghold in roadmap).</li></ul>
+
+<h2 id="trouble">Troubleshooting</h2>
+<ul>
+<li><b>Nothing types:</b> macOS → System Settings → Privacy → Accessibility → enable WhisperMic. Linux → Wayland: use XWayland or portal; X11 works natively.</li>
+<li><b>No mic:</b> Settings → Input device → pick correct. Check OS mic permission.</li>
+<li><b>Laggy:</b> switch to Deepgram or smaller local model; close resamplers; use wired mic.</li>
+<li><b>Shortcut conflicts:</b> change in Settings; avoid browser-reserved combos.</li>
+</ul>
+</main>
+</div></div>
+<footer><div class="wrap">© <span data-year></span> WhisperMic · <a href="install.html" style="color:var(--mut)">Install</a></div></footer>
+<script src="js/main.js"></script>
+</body></html>

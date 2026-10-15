@@ -7,6 +7,8 @@ node_modules/
 # builds
 dist/
 apps/desktop/src-tauri/target/
+# AppImage bundles are ~90MB; fetch from Releases, don't version them
+*.AppImage
 
 # env / secrets
 .env
