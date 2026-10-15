@@ -1,0 +1,23 @@
+{
+  "name": "whispermic-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.14",
+  "description": "WhisperMic — Turborepo monorepo (desktop dictation app + website)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "check": "turbo run check",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  },
+  "engines": {
+    "bun": ">=1.1"
+  }
+}

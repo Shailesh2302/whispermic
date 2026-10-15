@@ -1,0 +1,19 @@
+# deps
+node_modules/
+
+# turbo
+.turbo/
+
+# builds
+dist/
+apps/desktop/src-tauri/target/
+
+# env / secrets
+.env
+apps/desktop/.env
+*.pem
+*.key
+
+# logs / OS
+*.log
+.DS_Store
