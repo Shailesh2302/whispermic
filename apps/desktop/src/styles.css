@@ -1,0 +1,45 @@
+/* WhisperMic overlay — transparent, tiny, GPU-cheap. Total < 8KB CSS. */
+:root { --acc:#2dd4bf; --bg:rgba(13,20,32,.92); }
+*{box-sizing:border-box;user-select:none}
+html,body{margin:0;background:transparent;overflow:hidden;font-family:Inter,system-ui,sans-serif}
+#stage{display:flex;align-items:flex-start;gap:8px;padding:6px;cursor:grab}
+#stage:active{cursor:grabbing}
+/* Sleeping dot — 12px, barely visible */
+#dot{width:12px;height:12px;border-radius:50%;background:var(--acc);opacity:.5;margin:22px 0 0 22px;cursor:pointer}
+#dot.hidden{display:none}
+/* Mic — 56px circle */
+#mic{position:relative;width:56px;height:56px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 32% 30%,#8ff5e3,#2dd4bf 55%,#0e7490);
+  display:grid;place-items:center;font-size:24px;opacity:.62;transition:opacity .25s,transform .15s;
+  box-shadow:0 4px 18px rgba(0,0,0,.5)}
+#mic:hover{opacity:.95}
+#mic.listening{opacity:1;animation:pulse 1.5s infinite}
+#mic.listening #ico{display:inline-block;animation:vibe .28s linear infinite}
+@keyframes vibe{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-1.5px,1px) rotate(-8deg)}50%{transform:translate(1.5px,-1px) rotate(6deg)}75%{transform:translate(-1px,-1px) rotate(-4deg)}100%{transform:translate(1px,1.5px) rotate(5deg)}}
+#mic.processing{opacity:1;filter:saturate(1.4)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(45,212,191,.55)}70%{box-shadow:0 0 0 12px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
+#ico{pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+#ring{position:absolute;inset:0;pointer-events:none}
+#live{position:absolute;top:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:#f87171;border:2px solid #0b1220}
+#live.hidden{display:none}
+/* Transcript bubble */
+#bubble{background:var(--bg);border:1px solid #233349;border-radius:12px;padding:8px 10px;min-width:210px;max-width:320px;color:#e8eef7;backdrop-filter:blur(8px)}
+#bubble.hidden{display:none}
+#interim{font-size:13px;min-height:20px;font-family:ui-monospace,Menlo,Consolas,monospace}
+#interim .caret{display:inline-block;width:7px;height:13px;background:var(--acc);vertical-align:-2px;animation:blink 1s steps(1) infinite;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+#row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:#93a1b8}
+#state{text-transform:uppercase;letter-spacing:.6px;font-size:10px}
+#lvl{display:flex;gap:2px;margin-left:auto}
+#lvl i{width:4px;height:8px;background:#24344d;border-radius:2px}
+#lvl i.on{background:var(--acc)}
+#row button{background:transparent;border:0;color:#93a1b8;cursor:pointer;font-size:14px;padding:0 2px}
+#row button:hover{color:#fff}
+#panel{margin-top:8px;border-top:1px solid #233349;padding-top:8px;font-size:12px;color:#c4cfdf}
+#panel.hidden{display:none}
+#panel label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0}
+#panel select,#panel input[type=number]{background:#0b1220;border:1px solid #233349;color:#fff;border-radius:8px;padding:5px 8px;font-size:12px;max-width:170px}
+#panel .hint{font-size:11px;color:#7c8aa0;margin:8px 0}
+.btnrow{display:flex;gap:8px}
+.btnrow button{flex:1;border:1px solid #2b3d58;background:#16213200;color:#dbe6f5;border-radius:8px;padding:6px;cursor:pointer;font-size:12px}
+.btnrow button.primary{background:linear-gradient(135deg,#2dd4bf,#60a5fa);color:#06121a;font-weight:700;border:0}

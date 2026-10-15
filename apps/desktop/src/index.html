@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhisperMic</title><link rel="stylesheet" href="styles.css">
+<script type="module" src="main.js" defer></script>
+</head>
+<body>
+  <!-- Tiny overlay: 64px mic. data-tauri-drag-region makes it draggable. -->
+  <div id="stage" data-tauri-drag-region>
+    <div id="dot" class="hidden" title="WhisperMic sleeping — press Ctrl+Alt+D"></div>
+    <div id="mic" data-tauri-drag-region>
+      <span id="ico">🎙</span>
+      <canvas id="ring" width="64" height="64"></canvas>
+      <span id="live" class="hidden"></span>
+    </div>
+    <div id="bubble" class="hidden">
+      <div id="interim"><span id="txt"></span><span class="caret"></span></div>
+      <div id="row">
+        <span id="state">idle</span>
+        <span id="lvl"><i></i><i></i><i></i><i></i><i></i></span>
+        <button id="gear" title="Settings">⚙</button>
+        <button id="close" title="Hide (Esc)">×</button>
+      </div>
+      <div id="panel" class="hidden">
+        <label>Provider
+          <select id="provider">
+            <option value="mock">Mock (instant, dev)</option>
+            <option value="deepgram">Deepgram Nova-2 (fastest cloud)</option>
+            <option value="openai">OpenAI Whisper API</option>
+            <option value="local">Local whisper.cpp tiny.en (offline)</option>
+          </select>
+        </label>
+        <label>Auto-hide after silence (s)
+          <input id="hideAfter" type="number" min="1" max="15" value="3">
+        </label>
+        <label>Type at cursor <input id="typeAtCursor" type="checkbox" checked></label>
+        <div class="hint">Shortcut: <b id="sc">Ctrl+Alt+D</b> toggle · hold <b>Ctrl+Alt+Space</b> push-to-talk.<br>Click mic or press shortcut to dictate. Right-click mic = settings.</div>
+        <div class="btnrow">
+          <button id="toggle" class="primary">▶ Start</button>
+          <button id="save">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
