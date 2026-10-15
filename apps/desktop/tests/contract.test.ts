@@ -27,12 +27,22 @@ describe("overlay ↔ rust contract", () => {
   test("every invoke() has a Rust command", () => {
     const invoked = [...new Set(all(frontend, /invoke\("([a-z_]+)"/g))].sort();
     const gen = backend.match(/generate_handler!\[\s*([\s\S]*?)\]/);
-    const handlers = (gen?.[1] ?? "")
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .sort();
-    expect(invoked).toEqual(handlers);
+    const handlers = new Set(
+      (gen?.[1] ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+    );
+    expect(invoked.length).toBeGreaterThan(0);
+    // subset (not equality): removals go through invoke(removeCmd, …) dynamically
+    for (const cmd of invoked) expect(handlers.has(cmd)).toBe(true);
+  });
+
+  test("dynamic remove commands exist in Rust", () => {
+    // invoked as invoke(removeCmd, …) so covered separately from string literals
+    const gen = backend.match(/generate_handler!\[\s*([\s\S]*?)\]/);
+    const handlers = new Set(
+      (gen?.[1] ?? "").split(",").map((s) => s.trim()).filter(Boolean)
+    );
+    expect(handlers.has("remove_dictionary_word")).toBe(true);
+    expect(handlers.has("remove_snippet")).toBe(true);
   });
 
   test("every listened event is emitted by Rust", () => {

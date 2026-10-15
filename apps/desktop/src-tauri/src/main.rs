@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod audio;
+mod history;
+mod personal;
 mod refine;
 mod stt;
 mod typer;
@@ -32,6 +34,8 @@ pub struct DictationConfig {
     pub type_at_cursor: bool,
     #[serde(default = "default_shortcut")]
     pub shortcut: String,
+    #[serde(default = "default_style")]
+    pub style: String,
 }
 fn default_provider() -> String {
     std::env::var("STT_PROVIDER").unwrap_or_else(|_| "mock".into())
@@ -45,6 +49,9 @@ fn default_true() -> bool {
 fn default_shortcut() -> String {
     "Ctrl+Alt+D".into()
 }
+fn default_style() -> String {
+    "professional".into()
+}
 impl Default for DictationConfig {
     fn default() -> Self {
         Self {
@@ -52,6 +59,7 @@ impl Default for DictationConfig {
             hide_after_secs: 3,
             type_at_cursor: true,
             shortcut: default_shortcut(),
+            style: default_style(),
         }
     }
 }
@@ -84,6 +92,74 @@ fn start_dictation(app: AppHandle, _state: tauri::State<AppState>) -> Result<(),
 fn stop_dictation(app: AppHandle, _state: tauri::State<AppState>) -> Result<(), String> {
     stop_pipeline(&app);
     Ok(())
+}
+
+// ----------------------------------------------- Dictionary / snippets / history
+
+#[tauri::command]
+fn get_dictionary() -> std::collections::HashMap<String, String> {
+    personal::get_dictionary()
+}
+
+#[tauri::command]
+fn add_dictionary_word(
+    misheard: String,
+    correction: String,
+) -> Result<std::collections::HashMap<String, String>, String> {
+    personal::set_word(misheard, correction).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn remove_dictionary_word(
+    misheard: String,
+) -> Result<std::collections::HashMap<String, String>, String> {
+    personal::remove_word(&misheard).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_snippets() -> std::collections::HashMap<String, String> {
+    personal::get_snippets()
+}
+
+#[tauri::command]
+fn add_snippet(
+    trigger: String,
+    expansion: String,
+) -> Result<std::collections::HashMap<String, String>, String> {
+    personal::set_snippet(trigger, expansion).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn remove_snippet(
+    trigger: String,
+) -> Result<std::collections::HashMap<String, String>, String> {
+    personal::remove_snippet(&trigger).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_history() -> Vec<history::HistoryItem> {
+    let mut items = history::list();
+    items.reverse(); // newest first for the hub list
+    items.truncate(20);
+    items
+}
+
+#[tauri::command]
+fn clear_history() -> Result<(), String> {
+    history::clear().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn retype_text(app: AppHandle, text: String) -> Result<(), String> {
+    let enabled = app
+        .state::<AppState>()
+        .config
+        .lock()
+        .unwrap()
+        .type_at_cursor;
+    Typer::new(enabled)
+        .type_text(&text)
+        .map_err(|e| e.to_string())
 }
 
 // ------------------------------------------------------- Pipeline control
@@ -231,16 +307,28 @@ fn flush(
     let chunk = window.clone();
     // Keep overlap for next window so words on the boundary aren't cut.
     let keep = chunk.len().saturating_sub(WINDOW_SAMPLES).min(OVERLAP);
+    // Fresh per flush: tiny JSON files, always reflects latest Settings edits.
+    let style = refine::Style::parse(&app.state::<AppState>().config.lock().unwrap().style);
+    let dict = personal::get_dictionary();
+    let snippets = personal::get_snippets();
     let _res = tauri::async_runtime::block_on(stt.transcribe(&chunk));
     match _res {
         Ok(t) => {
-            let polished = refine::refine(&t.text);
+            let final_now = is_final || t.is_final;
+            let polished = if final_now {
+                refine::refine_final(&t.text, style, &dict, &snippets)
+            } else {
+                refine::refine_partial(&t.text, style, &dict)
+            };
             if !polished.trim().is_empty() {
                 let _ = typer.type_text(&polished);
                 let _ = app.emit(
                     "transcript",
-                    serde_json::json!({ "text": polished, "is_final": is_final || t.is_final }),
+                    serde_json::json!({ "text": polished, "is_final": final_now }),
                 );
+                if final_now {
+                    let _ = history::append(&polished);
+                }
             }
         }
         Err(e) => {
@@ -335,7 +423,16 @@ fn main() {
             start_dictation,
             stop_dictation,
             get_config,
-            set_config
+            set_config,
+            get_dictionary,
+            add_dictionary_word,
+            remove_dictionary_word,
+            get_snippets,
+            add_snippet,
+            remove_snippet,
+            get_history,
+            clear_history,
+            retype_text
         ])
         .run(tauri::generate_context!())
         .expect("failed to run WhisperMic");

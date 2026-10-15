@@ -34,12 +34,37 @@
         <label>Auto-hide after silence (s)
           <input id="hideAfter" type="number" min="1" max="15" value="3">
         </label>
+        <label>Style
+          <select id="style">
+            <option value="professional">Professional — caps + punctuation</option>
+            <option value="concise">Concise — also cuts hedges</option>
+            <option value="casual">Casual — relaxed casing</option>
+          </select>
+        </label>
         <label>Type at cursor <input id="typeAtCursor" type="checkbox" checked></label>
         <div class="hint">Shortcut: <b id="sc">Ctrl+Alt+D</b> toggle · hold <b>Ctrl+Alt+Space</b> push-to-talk.<br>Click mic or press shortcut to dictate. Right-click mic = settings.</div>
         <div class="btnrow">
           <button id="toggle" class="primary">▶ Start</button>
           <button id="save">Save</button>
         </div>
+        <details id="dictBox">
+          <summary>Dictionary <span id="dictCount"></span></summary>
+          <div class="pair"><input id="dictFrom" placeholder="hears"><span>→</span><input id="dictTo" placeholder="writes"><button id="dictAdd">+</button></div>
+          <ul id="dictList"></ul>
+          <div class="hint">Fixes names &amp; jargon, e.g. hears <i>koober neties</i> → writes <i>Kubernetes</i>.</div>
+        </details>
+        <details id="snipBox">
+          <summary>Snippets <span id="snipCount"></span></summary>
+          <div class="pair"><input id="snipFrom" placeholder="say: my email"><span>→</span><input id="snipTo" placeholder="types: ada@work.com"><button id="snipAdd">+</button></div>
+          <ul id="snipList"></ul>
+          <div class="hint">Say the whole trigger alone and it expands.</div>
+        </details>
+        <details id="histBox">
+          <summary>History <span id="histCount"></span></summary>
+          <ul id="histList"></ul>
+          <div class="btnrow"><button id="histClear">Clear</button></div>
+          <div class="hint">Click an entry to type it again at your cursor.</div>
+        </details>
       </div>
     </div>
   </div>

@@ -59,9 +59,67 @@ $("save").addEventListener("click", async () => {
     provider: $("provider").value,
     hide_after_secs: hideAfterSec,
     type_at_cursor: $("typeAtCursor").checked,
+    style: $("style").value,
   }});
   panel.classList.add("hidden");
 });
+
+// --- Dictionary / snippets / history hub ---
+function renderMap(list, map, removeCmd) {
+  const entries = Object.entries(map);
+  list.innerHTML = "";
+  entries.slice(0, 30).forEach(([from, to]) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.className = "x";
+    b.textContent = "×";
+    b.title = "Remove";
+    b.addEventListener("click", async (e) => { e.stopPropagation(); await invoke(removeCmd, { [removeCmd === "remove_snippet" ? "trigger" : "misheard"]: from }); await refreshPersonal(); });
+    li.append(document.createTextNode(`${from} → ${to} `), b);
+    list.append(li);
+  });
+  return entries.length;
+}
+async function refreshPersonal() {
+  try {
+    const [d, s] = await Promise.all([invoke("get_dictionary"), invoke("get_snippets")]);
+    $("dictCount").textContent = `(${Object.keys(d).length})`;
+    $("snipCount").textContent = `(${Object.keys(s).length})`;
+    renderMap($("dictList"), d, "remove_dictionary_word");
+    renderMap($("snipList"), s, "remove_snippet");
+  } catch {}
+}
+$("dictAdd").addEventListener("click", async () => {
+  const a = $("dictFrom").value.trim(), b = $("dictTo").value.trim();
+  if (!a || !b) return;
+  await invoke("add_dictionary_word", { misheard: a, correction: b });
+  $("dictFrom").value = $("dictTo").value = "";
+  await refreshPersonal();
+});
+$("snipAdd").addEventListener("click", async () => {
+  const a = $("snipFrom").value.trim(), b = $("snipTo").value.trim();
+  if (!a || !b) return;
+  await invoke("add_snippet", { trigger: a, expansion: b });
+  $("snipFrom").value = $("snipTo").value = "";
+  await refreshPersonal();
+});
+async function refreshHistory() {
+  try {
+    const items = await invoke("get_history");
+    $("histCount").textContent = `(${items.length})`;
+    const ul = $("histList");
+    ul.innerHTML = "";
+    items.slice(0, 10).forEach((it) => {
+      const li = document.createElement("li");
+      li.textContent = it.text.length > 60 ? it.text.slice(0, 60) + "…" : it.text;
+      li.title = "Click to type again at cursor";
+      li.addEventListener("click", async () => { await invoke("retype_text", { text: it.text }); });
+      ul.append(li);
+    });
+  } catch {}
+}
+$("histClear").addEventListener("click", async () => { await invoke("clear_history"); await refreshHistory(); });
+$("histBox").addEventListener("toggle", () => { if ($("histBox").open) refreshHistory(); });
 
 // --- Rust events ---
 await listen("transcript", (e) => {
@@ -109,9 +167,12 @@ try {
     $("provider").value = cfg.provider ?? "mock";
     $("hideAfter").value = cfg.hide_after_secs ?? 3;
     $("typeAtCursor").checked = cfg.type_at_cursor ?? true;
+    $("style").value = cfg.style ?? "professional";
     hideAfterSec = cfg.hide_after_secs ?? 3;
     if (cfg.shortcut) $("sc").textContent = cfg.shortcut;
   }
 } catch {}
+await refreshPersonal();
+await refreshHistory();
 setState("idle");
 scheduleHide();
